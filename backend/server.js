@@ -452,6 +452,7 @@ app.use('/api/recommendations', recommendationRoutes);
 app.use('/recommendations', recommendationRoutes);
 app.use('/api/micro', microLearnRoutes);
 app.use('/api/flashcards', flashcardRoutes);
+app.use('/api/factuality', require('./routes/factualityRoutes'));
 app.use('/api/flashcard-decks', flashcardDeckRoutes);
 app.use('/api/decks', require('./routes/publicDeckRoutes'));
 app.use('/api/share', shareRoutes);

@@ -55,6 +55,7 @@ const DoubtSessionMessage = require('./DoubtSessionMessage');
 const Exam = require('./Exam');
 const ExamIntegrityReport = require('./ExamIntegrityReport');
 const ExamStrategy = require('./ExamStrategy');
+const FactualityVerificationLog = require('./FactualityVerificationLog');
 const Feedback = require('./Feedback');
 const Flashcard = require('./Flashcard');
 const FlashcardDeck = require('./FlashcardDeck');
@@ -248,6 +249,8 @@ User.hasMany(UserPasskey, { foreignKey: 'userId', as: 'passkeys', onDelete: 'CAS
 UserPasskey.belongsTo(User, { foreignKey: 'userId', as: 'userRef' });
 User.hasMany(VivaSession, { foreignKey: 'userId', as: 'vivaSessions', onDelete: 'CASCADE' });
 VivaSession.belongsTo(User, { foreignKey: 'userId', as: 'userRef' });
+User.hasMany(FactualityVerificationLog, { foreignKey: 'userId', as: 'factualityLogs', onDelete: 'CASCADE' });
+FactualityVerificationLog.belongsTo(User, { foreignKey: 'userId', as: 'userRef' });
 
 Note.hasMany(NoteLink, { foreignKey: 'sourceNoteId', as: 'outgoingLinks', onDelete: 'CASCADE' });
 Note.hasMany(NoteLink, { foreignKey: 'targetNoteId', as: 'incomingLinks', onDelete: 'CASCADE' });
@@ -535,6 +538,7 @@ module.exports = {
   Exam,
   ExamIntegrityReport,
   ExamStrategy,
+  FactualityVerificationLog,
   Feedback,
   Flashcard,
   FlashcardDeck,
