@@ -430,6 +430,7 @@ app.use('/api/pyq', (req, res) => {
   res.status(301).redirect(canonicalPath);
 });
 app.use('/api/community', communityRoutes);
+app.use('/api/e2ee-chat', require('./routes/e2eeChatRoutes'));
 app.use('/api/circuits', require('./routes/circuitRoutes'));
 app.use('/api/language', require('./routes/languageRoutes'));
 app.use('/api/squads', squadRoutes);
@@ -676,6 +677,7 @@ global.io = io;
 // Initialize socket handlers
 require('./sockets/battleHandler')(io);
 require('./sockets/chatHandler')(io);
+require('./sockets/e2eeChatHandler')(io);
 require('./sockets/crdtHandler')(io);
 require('./sockets/squadHandler')(io);
 require('./sockets/flashcardCollaborationHandler')(io);
