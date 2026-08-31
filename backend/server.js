@@ -436,6 +436,7 @@ app.use('/api/squads', squadRoutes);
 app.use('/api/study', fatigueRoutes);
 app.use('/api/documents', pdfAnnotationRoutes);
 app.use('/api/sync', syncRoutes);
+app.use('/api/subjective-grader', require('./routes/subjectiveGraderRoutes'));
 app.use('/api/study-plans', studyPlanRoutes);
 app.use('/api/milestones', milestoneRoutes);
 app.use('/api/streaks', streakRoutes);
