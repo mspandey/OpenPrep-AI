@@ -91,7 +91,7 @@
     "redis": "^6.2.1",
     "sanitize-html": "^2.13.1",
     "sequelize": "^6.37.8",
-    "sharp": "^0.33.2",
+    "sharp": "^0.35.4",
     "socket.io": "^4.8.3",
     "speakeasy": "^2.0.0",
     "swagger-jsdoc": "^6.2.8",
