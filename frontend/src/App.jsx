@@ -20,6 +20,8 @@ import OfflineIndicator from './components/common/OfflineIndicator';
 import Walkthrough from './components/tutorial/Walkthrough';
 import MobileBottomNav from './components/common/MobileBottomNav';
 import PomodoroWidget from './components/timer/PomodoroWidget';
+import MicroReviewModal from './components/widgets/MicroReviewModal';
+import { startMicroScheduler, showMicroNotification } from './services/microScheduleWorker';
 import './App.css';
 
 
@@ -83,6 +85,25 @@ function App() {
   const { sessionExpired, aiQuotaExceededUntil, isAuthenticated, user } = useSelector((state) => state.auth);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [savedSessionPrompt, setSavedSessionPrompt] = useState(null);
+  const [isMicroModalOpen, setIsMicroModalOpen] = useState(false);
+
+  // Setup micro-learning trigger and global window handler
+  useEffect(() => {
+    window.openMicroReviewModal = () => setIsMicroModalOpen(true);
+
+    if (isAuthenticated) {
+      const stopScheduler = startMicroScheduler(() => {
+        setIsMicroModalOpen(true);
+        showMicroNotification('OpenPrep AI: Spaced Recall Time!', {
+          body: 'Take 30 seconds for a quick micro-quiz question to keep your study streak alive.',
+        });
+      });
+      return () => {
+        stopScheduler();
+        delete window.openMicroReviewModal;
+      };
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -198,6 +219,7 @@ function App() {
       <Walkthrough />
       <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       {localStorage.getItem('token') && <PomodoroWidget />}
+      <MicroReviewModal isOpen={isMicroModalOpen} onClose={() => setIsMicroModalOpen(false)} />
       <main id="main-content" tabIndex="-1" role="main" className="focus:outline-none min-h-screen">
         <Suspense fallback={<PageSkeleton />}>
         <Routes>

@@ -1,39 +1,6 @@
 const { DataTypes, Sequelize } = require('sequelize');
 const { sequelize } = require('../config/db');
 
-const User = require('./User');
-const Quiz = require('./Quiz');
-const AIUsageLog = require('./AIUsageLog')(sequelize, DataTypes);
-const ProviderHealthStatus = require('./ProviderHealthStatus')(sequelize, DataTypes);
-
-const SchedulerVersion = require('./SchedulerVersion');
-
-const FlashcardSchedulingState = require('./FlashcardSchedulingState');
-const FlashcardReviewHistory = require('./FlashcardReviewHistory');
-const ReviewSubmissionToken = require('./ReviewSubmissionToken');
-const QuizValidationLog = require('./QuizValidationLog');
-const Folder = require('./Folder');
-const Exam = require('./Exam');
-const Subject = require('./Subject');
-const Topic = require('./Topic');
-const SkillDependency = require('./SkillDependency');
-const ExamStrategy = require('./ExamStrategy');
-const StudyTip = require('./StudyTip');
-const StudyReminder = require('./StudyReminder');
-const AlumniMentorProfile = require('./AlumniMentorProfile');
-const ResumeParseSession = require('./ResumeParseSession');
-const MockInterview = require('./MockInterview');
-const SalaryNegotiation = require('./SalaryNegotiation');
-const PYQ = require('./PYQ');
-
-
-const StudyPlan = require('./StudyPlan');
-const QuizAttempt = require('./QuizAttempt');
-
-const Note = require('./Note');
-const Question = require('./Question');
-const QuestionComment = require('./QuestionComment');
-
 /**
  * The model registry: every Sequelize model the backend can reach, wired to
  * the single shared instance and associated in one place.
@@ -89,11 +56,10 @@ const FlashcardSchedulingState = require('./FlashcardSchedulingState');
 const FocusSession = require('./FocusSession');
 const FocusSessionLog = require('./FocusSessionLog');
 const Folder = require('./Folder');
-const HabitLog = require('./HabitLog');
-const HabitStreak = require('./HabitStreak');
 const HandwrittenSubmission = require('./HandwrittenSubmission');
 const LearningPath = require('./LearningPath');
 const MistakeLogEntry = require('./MistakeLogEntry');
+const MockExamSession = require('./MockExamSession');
 const MockInterview = require('./MockInterview');
 const MockInterviewSession = require('./MockInterviewSession');
 const Note = require('./Note');
@@ -115,18 +81,6 @@ const QuizBookmark = require('./QuizBookmark');
 const QuizTelemetryEvent = require('./QuizTelemetryEvent');
 const QuizValidationLog = require('./QuizValidationLog');
 const ReadinessSnapshot = require('./ReadinessSnapshot');
-const SubjectGoal = require('./SubjectGoal');
-const StudyHabit = require('./StudyHabit')(sequelize, DataTypes);
-const HabitLog = require('./HabitLog')(sequelize, DataTypes);
-const HabitStreak = require('./HabitStreak')(sequelize, DataTypes);
-
-
-
-const StudySquad = require('./StudySquad');
-const SquadMember = require('./SquadMember');
-const SquadChallenge = require('./SquadChallenge');
-const SquadChallengeContribution = require('./SquadChallengeContribution');
-
 const ResumeParseSession = require('./ResumeParseSession');
 const ReviewSubmissionToken = require('./ReviewSubmissionToken');
 const SalaryNegotiation = require('./SalaryNegotiation');
@@ -138,25 +92,41 @@ const SquadAchievement = require('./SquadAchievement');
 const SquadActivity = require('./SquadActivity');
 const SquadActivityReaction = require('./SquadActivityReaction');
 const SquadAuditLog = require('./SquadAuditLog');
+const SquadChallenge = require('./SquadChallenge');
+const SquadChallengeContribution = require('./SquadChallengeContribution');
+const SquadMember = require('./SquadMember');
 const StudyGoal = require('./StudyGoal');
 const StudyGoalProgress = require('./StudyGoalProgress');
+const StudyPlan = require('./StudyPlan');
 const StudyPlanVersion = require('./StudyPlanVersion');
+const StudyReminder = require('./StudyReminder');
+const StudySquad = require('./StudySquad');
 const StudyTask = require('./StudyTask');
+const StudyTip = require('./StudyTip');
+const Subject = require('./Subject');
+const SubjectGoal = require('./SubjectGoal');
 const Syllabus = require('./Syllabus');
 const SyllabusTopic = require('./SyllabusTopic');
+const Topic = require('./Topic');
 const UsageQuota = require('./UsageQuota');
+const User = require('./User');
 const UserBadge = require('./UserBadge');
+const UserPasskey = require('./UserPasskey');
 const UserProgress = require('./UserProgress');
 const VivaSession = require('./VivaSession');
-const ModeratorAuditLog = require('./ModeratorAuditLog');
 const WeeklyStudyReport = require('./WeeklyStudyReport');
-const StudyMilestone = require('./StudyMilestone')(sequelize, DataTypes);
-const UserMilestone = require('./UserMilestone')(sequelize, DataTypes);
 
 // Models exporting a (sequelize, DataTypes) factory.
+const AIUsageLog = require('./AIUsageLog')(sequelize, DataTypes);
+const HabitLog = require('./HabitLog')(sequelize, DataTypes);
+const HabitStreak = require('./HabitStreak')(sequelize, DataTypes);
 const InterviewAnalytics = require('./InterviewAnalytics')(sequelize, DataTypes);
+const ProviderHealthStatus = require('./ProviderHealthStatus')(sequelize, DataTypes);
 const SharedNote = require('./SharedNote')(sequelize, DataTypes);
+const StudyHabit = require('./StudyHabit')(sequelize, DataTypes);
+const StudyMilestone = require('./StudyMilestone')(sequelize, DataTypes);
 const StudySession = require('./StudySession')(sequelize, DataTypes);
+const UserMilestone = require('./UserMilestone')(sequelize, DataTypes);
 
 // Models exporting a { Model, initModel } pair.
 const { AnalyticsEvent, initAnalyticsEvent } = require('./AnalyticsEvent');
@@ -166,6 +136,7 @@ const { BountySolution, initBountySolution } = require('./BountySolution');
 const { BountySolutionVote, initBountySolutionVote } = require('./BountySolutionVote');
 const { JobApplication, initJobApplication } = require('./JobApplication');
 const { JobOpportunity, initJobOpportunity } = require('./JobOpportunity');
+const { ModeratorAuditLog, initModeratorAuditLog } = require('./ModeratorAuditLog');
 const { Sponsor, initSponsor } = require('./Sponsor');
 
 // A Model subclass is not usable until init() has run against the shared
@@ -177,6 +148,7 @@ initBountySolution(sequelize);
 initBountySolutionVote(sequelize);
 initJobApplication(sequelize);
 initJobOpportunity(sequelize);
+initModeratorAuditLog(sequelize);
 initSponsor(sequelize);
 
 // User associations
@@ -187,9 +159,11 @@ User.hasMany(PYQ, { foreignKey: 'user', onDelete: 'CASCADE' });
 User.hasMany(Bounty, { foreignKey: 'authorId', as: 'bounties', onDelete: 'CASCADE' });
 Bounty.belongsTo(User, { foreignKey: 'authorId', as: 'author' });
 Bounty.belongsTo(User, { foreignKey: 'winnerId', as: 'winner' });
+
 Bounty.hasMany(BountySolution, { foreignKey: 'bountyId', as: 'solutions', onDelete: 'CASCADE' });
 BountySolution.belongsTo(Bounty, { foreignKey: 'bountyId', as: 'bounty' });
 BountySolution.belongsTo(User, { foreignKey: 'authorId', as: 'author' });
+
 BountySolution.hasMany(BountySolutionVote, { foreignKey: 'solutionId', as: 'votes', onDelete: 'CASCADE' });
 BountySolutionVote.belongsTo(BountySolution, { foreignKey: 'solutionId', as: 'solution' });
 User.hasMany(StudyPlan, { foreignKey: 'user', onDelete: 'CASCADE' });
@@ -223,8 +197,15 @@ User.hasMany(ActivityLog, { foreignKey: 'user', onDelete: 'CASCADE' });
 User.hasMany(Achievement, { foreignKey: 'userId', as: 'achievements', onDelete: 'CASCADE' });
 User.hasMany(UserBadge, { foreignKey: 'userId', as: 'badgesRef', onDelete: 'CASCADE' });
 User.hasMany(UsageQuota, { foreignKey: 'userId', onDelete: 'CASCADE' });
+User.hasMany(UserPasskey, { foreignKey: 'userId', as: 'passkeys', onDelete: 'CASCADE' });
+UserPasskey.belongsTo(User, { foreignKey: 'userId', as: 'userRef' });
 User.hasMany(VivaSession, { foreignKey: 'userId', as: 'vivaSessions', onDelete: 'CASCADE' });
 VivaSession.belongsTo(User, { foreignKey: 'userId', as: 'userRef' });
+
+Note.hasMany(NoteLink, { foreignKey: 'sourceNoteId', as: 'outgoingLinks', onDelete: 'CASCADE' });
+Note.hasMany(NoteLink, { foreignKey: 'targetNoteId', as: 'incomingLinks', onDelete: 'CASCADE' });
+NoteLink.belongsTo(Note, { foreignKey: 'sourceNoteId', as: 'sourceNote' });
+NoteLink.belongsTo(Note, { foreignKey: 'targetNoteId', as: 'targetNote' });
 
 // Exam associations
 Exam.belongsTo(User, { foreignKey: 'user', as: 'userRef' });
@@ -312,14 +293,6 @@ QuizAttempt.belongsTo(Quiz, { foreignKey: 'quiz', as: 'quizRef', onDelete: 'CASC
 QuizAttempt.hasOne(ExamIntegrityReport, { foreignKey: 'quizAttemptId', as: 'integrityReport', onDelete: 'CASCADE' });
 ExamIntegrityReport.belongsTo(QuizAttempt, { foreignKey: 'quizAttemptId', as: 'attemptRef' });
 ExamIntegrityReport.belongsTo(User, { foreignKey: 'userId', as: 'userRef' });
-
-// MistakeLogEntry associations
-User.hasMany(MistakeLogEntry, { foreignKey: 'user', onDelete: 'CASCADE' });
-MistakeLogEntry.belongsTo(User, { foreignKey: 'user', as: 'userRef' });
-MistakeLogEntry.belongsTo(Subject, { foreignKey: 'subjectId', as: 'subjectRef', onDelete: 'SET NULL' });
-MistakeLogEntry.belongsTo(Topic, { foreignKey: 'topicId', as: 'topicRef', onDelete: 'SET NULL' });
-MistakeLogEntry.belongsTo(QuizAttempt, { foreignKey: 'quizAttemptId', as: 'attemptRef', onDelete: 'SET NULL' });
-MistakeLogEntry.belongsTo(Quiz, { foreignKey: 'quizId', as: 'quizRef', onDelete: 'SET NULL' });
 
 // Note associations
 Note.belongsTo(Subject, { foreignKey: 'subject', as: 'subjectRef', onDelete: 'CASCADE' });
@@ -413,21 +386,10 @@ Subject.hasMany(ReadinessSnapshot, { foreignKey: 'subjectId', onDelete: 'CASCADE
 ReadinessSnapshot.belongsTo(Subject, { foreignKey: 'subjectId', as: 'subjectRef' });
 Subject.hasOne(SubjectGoal, { foreignKey: 'subject', as: 'goal', onDelete: 'CASCADE' });
 SubjectGoal.belongsTo(Subject, { foreignKey: 'subject', as: 'subjectRef' });
-User.hasMany(SubjectGoal, { foreignKey: 'user', as: 'subjectGoals', onDelete: 'CASCADE' });
+// StudySquad associationsUser.hasMany(SubjectGoal, { foreignKey: 'user', as: 'subjectGoals', onDelete: 'CASCADE' });
 SubjectGoal.belongsTo(User, { foreignKey: 'user', as: 'userRef' });
 User.hasMany(StudySquad, { foreignKey: 'adminUserId', as: 'ownedSquads', onDelete: 'CASCADE' });
 StudySquad.belongsTo(User, { foreignKey: 'adminUserId', as: 'adminRef' });
-
-StudySquad.hasMany(Whiteboard, { foreignKey: 'squadId', onDelete: 'CASCADE' });
-Whiteboard.belongsTo(StudySquad, { foreignKey: 'squadId', as: 'squadRef' });
-
-User.hasMany(MockExamSession, { foreignKey: 'userId', onDelete: 'CASCADE' });
-MockExamSession.belongsTo(User, { foreignKey: 'userId', as: 'userRef' });
-
-Note.hasMany(NoteLink, { foreignKey: 'sourceNoteId', as: 'outgoingLinks', onDelete: 'CASCADE' });
-Note.hasMany(NoteLink, { foreignKey: 'targetNoteId', as: 'incomingLinks', onDelete: 'CASCADE' });
-NoteLink.belongsTo(Note, { foreignKey: 'sourceNoteId', as: 'sourceNote' });
-NoteLink.belongsTo(Note, { foreignKey: 'targetNoteId', as: 'targetNote' });
 
 StudySquad.hasMany(SquadMember, { foreignKey: 'squadId', onDelete: 'CASCADE' });
 SquadMember.belongsTo(StudySquad, { foreignKey: 'squadId', as: 'squadRef' });
@@ -525,12 +487,15 @@ module.exports = {
   InterviewAnalytics,
   JobApplication,
   JobOpportunity,
+  LearningEvent,
   LearningPath,
   MistakeLogEntry,
+  MockExamSession,
   MockInterview,
   MockInterviewSession,
   ModeratorAuditLog,
   Note,
+  NoteLink,
   Notification,
   NotificationSettings,
   PYQ,
@@ -585,31 +550,8 @@ module.exports = {
   User,
   UserBadge,
   UserMilestone,
+  UserPasskey,
   UserProgress,
   VivaSession,
-  NoteLink,
-  BountyQuestion,
-  BountyAnswer,
-  StudyHabit,
-  HabitLog,
-  HabitStreak,
-  AIUsageLog,
-  ProviderHealthStatus,
-  ExamIntegrityReport,
-  LearningPath,
-  Bounty,
-  BountySolution,
-  BountySolutionVote,
-  SkillDependency,
-  ExamStrategy,
-  StudyTip,
-  StudyReminder,
-  AlumniMentorProfile,
-  ResumeParseSession,
-  MockInterview,
-  SalaryNegotiation,
-
   WeeklyStudyReport,
 };
-
-

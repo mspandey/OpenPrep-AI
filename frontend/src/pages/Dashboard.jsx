@@ -557,6 +557,16 @@ const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
           onClick={() => handleExportReport('pdf')}
         />
         <GoldTabButton
+          icon={Clock}
+          label="Micro Dose"
+          delay={0.42}
+          onClick={() => {
+            if (typeof window.openMicroReviewModal === 'function') {
+              window.openMicroReviewModal();
+            }
+          }}
+        />
+        <GoldTabButton
           icon={MessageSquare}
           label="Study Room"
           delay={0.45}

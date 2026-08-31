@@ -470,5 +470,10 @@ export const linkOutlookCalendar = (payload) => API.post('/calendar-sync/outlook
 export const checkCalendarConflicts = (payload) =>
   API.post('/calendar-sync/check-conflicts', payload);
 
+// ── Micro-Learning Study Companion APIs ────────────────────────────────
+export const getNextDueMicroCard = () => API.get('/micro/next-due-card');
+export const submitMicroAnswer = (payload) => API.post('/micro/submit-answer', payload);
+
 export default API;
+
 
