@@ -18,7 +18,7 @@ const QuizBookmark = require('../models/QuizBookmark');
 const quizGenerationService = require('../services/quizGenerationService');
 const quizEvaluationService = require('../services/quizEvaluationService');
 const quizAnalyticsService = require('../services/quizAnalyticsService');
-
+const analyticsAggregationService = require('../services/analyticsAggregationService');
 const geminiService = require('../services/geminiService');
 const cacheService = require('../services/cacheService');
 const { GeminiRateLimitError, GeminiServerError } = require('../services/geminiService');
@@ -552,35 +552,16 @@ exports.submitQuizAttempt = async (req, res, next) => {
       .catch((err) => console.error('Error logging mistake notebook entries:', err));
 
     // Update Progress (supports both topic-level and subject-level quizzes)
-    const progressWhere = {
-      user: req.user.id,
+    // Recorded as an immutable LearningEvent first, then applied to the
+    // Progress aggregate under a per-key lock, so concurrent submissions
+    // can't race each other and this attempt can never be double-counted.
+    await analyticsAggregationService.recordQuizAttemptEvent({
+      userId: req.user.id,
       subject: quiz.subject,
-    };
-    if (quiz.topic) {
-      progressWhere.topic = quiz.topic;
-    }
-
-    let progress = await Progress.findOne({ where: progressWhere });
-
-    if (progress) {
-      const quizScores = [...progress.quizScores];
-      quizScores.push({ attempt: attempt.id, score, date: new Date() });
-      progress.quizScores = quizScores;
-
-      if (score > progress.completionPercentage) {
-        progress.completionPercentage = Math.min(score, 100);
-      }
-      await progress.save();
-    } else {
-      await Progress.create({
-        user: req.user.id,
-        subject: quiz.subject,
-        topic: quiz.topic || null,
-        completionPercentage: score,
-        quizScores: [{ attempt: attempt.id, score, date: new Date() }],
-      });
-    }
-
+      topic: quiz.topic || null,
+      attemptId: attempt.id,
+      score,
+    });
 // Log Activity
     await ActivityLog.create({
       user: req.user.id,

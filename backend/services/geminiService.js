@@ -119,17 +119,41 @@ async function callWithTimeout(model, prompt, timeoutMs = 30000) {
     timeoutId = setTimeout(() => reject(new Error('Gemini request timed out')), timeoutMs);
   });
 
+  const { getTracer } = require('../config/telemetry');
+  const tracer = getTracer('gemini-service');
+  const modelName = model.model || 'gemini-1.5-flash';
+  const startTime = Date.now();
+
+  const span = tracer.startSpan('gemini.generateContent');
+  span.setAttribute('ai.model', modelName);
+
   try {
     const result = await Promise.race([model.generateContent(prompt), timeoutPromise]);
+    const latency = Date.now() - startTime;
+    span.setAttribute('ai.latency_ms', latency);
+
+    if (result && result.response && result.response.usageMetadata) {
+      const { promptTokenCount, candidatesTokenCount, totalTokenCount } = result.response.usageMetadata;
+      if (promptTokenCount) span.setAttribute('ai.prompt_tokens', promptTokenCount);
+      if (candidatesTokenCount) span.setAttribute('ai.completion_tokens', candidatesTokenCount);
+      if (totalTokenCount) span.setAttribute('ai.total_tokens', totalTokenCount);
+    }
+
+    span.setStatus({ code: 1 }); // OK
     try {
       const { recordTokens } = require('./metricsService');
-      recordTokens(result, model.model || 'gemini-1.5-flash');
+      recordTokens(result, modelName);
     } catch (e) {
       // ignore
     }
     return result;
+  } catch (err) {
+    span.recordException(err);
+    span.setStatus({ code: 2, message: err.message || 'Gemini Generation Failed' }); // ERROR
+    throw err;
   } finally {
     clearTimeout(timeoutId);
+    span.end();
   }
 }
 

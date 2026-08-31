@@ -337,6 +337,10 @@ exports.uploadNote = async (req, res, next) => {
       description: `Uploaded new study notes: "${note.title}"`,
     });
 
+    // Index wiki-links
+    const { indexNoteLinks } = require('../services/noteGraphService');
+    await indexNoteLinks(note.id, note.content);
+
     res.status(201).json({ success: true, data: note });
   } catch (error) {
     if (req.file) {
@@ -855,6 +859,11 @@ exports.updateNote = async (req, res, next) => {
     if (tags !== undefined) note.tags = typeof tags === 'string' ? tags.split(',').map(t => t.trim()).filter(Boolean) : (Array.isArray(tags) ? tags : []);
 
     await note.save();
+
+    // Index wiki-links
+    const { indexNoteLinks } = require('../services/noteGraphService');
+    await indexNoteLinks(note.id, note.content);
+
     res.status(200).json({ success: true, data: note });
   } catch (error) {
     next(error);
@@ -933,6 +942,60 @@ exports.getNote = async (req, res, next) => {
     }
 
     res.status(200).json({ success: true, data: note });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getNotesGraph = async (req, res, next) => {
+  try {
+    const { getKnowledgeGraph } = require('../services/noteGraphService');
+    const graphData = await getKnowledgeGraph(req.user.id);
+    res.status(200).json({ success: true, data: graphData });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.syncNotes = async (req, res, next) => {
+  try {
+    const { notes } = req.body;
+    if (!Array.isArray(notes)) {
+      return res.status(400).json({ success: false, error: 'Payload must contain a "notes" array' });
+    }
+
+    const { indexNoteLinks } = require('../services/noteGraphService');
+    const syncedNotes = [];
+
+    for (const item of notes) {
+      let note = null;
+      if (item.id) {
+        note = await Note.findOne({ where: { id: item.id, user: req.user.id } });
+      }
+
+      if (note) {
+        if (item.title !== undefined) note.title = item.title;
+        if (item.content !== undefined) note.content = item.content;
+        if (item.category !== undefined) note.category = item.category;
+        if (item.tags !== undefined) note.tags = item.tags;
+        await note.save();
+      } else {
+        note = await Note.create({
+          id: item.id || undefined,
+          title: item.title || 'Untitled Note',
+          content: item.content || '',
+          subject: item.subjectId || item.subject,
+          category: item.category || 'Lecture Notes',
+          tags: item.tags || [],
+          user: req.user.id,
+        });
+      }
+
+      await indexNoteLinks(note.id, note.content);
+      syncedNotes.push(note);
+    }
+
+    res.status(200).json({ success: true, data: syncedNotes });
   } catch (error) {
     next(error);
   }

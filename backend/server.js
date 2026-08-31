@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('./config/telemetry');
 const { Sentry, requestHandler: sentryRequestHandler, errorHandler: sentryErrorHandler } = require('./utils/sentry');
 const express = require('express');
 const compression = require('compression');
@@ -105,6 +106,7 @@ const squadRoutes = require('./routes/squadRoutes');
 const badgeRoutes = require('./routes/badgeRoutes');
 const whiteboardRoutes = require('./routes/whiteboardRoutes');
 const mockExamRoutes = require('./routes/mockExamRoutes');
+const aiGatewayRoutes = require('./routes/aiGatewayRoutes');
 const visualizerRoutes = require('./routes/visualizerRoutes');
 const weaknessDetectionRoutes = require('./routes/weaknessDetectionRoutes');
 const pyqIntelligenceRoutes = require('./routes/pyqIntelligenceRoutes');
@@ -128,6 +130,7 @@ const bountyRoutes = require('./routes/bountyRoutes');
 const codeRoutes = require('./routes/codeRoutes');
 const learningPathRoutes = require('./routes/learningPathRoutes');
 const mistakeNotebookRoutes = require('./routes/mistakeNotebookRoutes');
+const microLearnRoutes = require('./routes/microLearnRoutes');
 const { initNotificationCron } = require('./services/notificationService');
 const { initDifficultyCalibratorCron } = require('./services/difficultyCalibrator');
 const { initNightlyBadgeEvaluatorCron } = require('./services/badgeEvaluationService');
@@ -159,6 +162,16 @@ const redisService = require('./services/redisService');
 redisService.connect();
 const app = express();
 app.use(sentryRequestHandler);
+
+app.get('/metrics', async (req, res) => {
+  try {
+    const { register } = require('./services/metricsService');
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+  } catch (err) {
+    res.status(500).end(err.message);
+  }
+});
 
 // Prometheus HTTP request duration tracking middleware
 app.use((req, res, next) => {
@@ -417,12 +430,15 @@ app.use('/api/pyq', (req, res) => {
   res.status(301).redirect(canonicalPath);
 });
 app.use('/api/community', communityRoutes);
+app.use('/api/e2ee-chat', require('./routes/e2eeChatRoutes'));
 app.use('/api/circuits', require('./routes/circuitRoutes'));
+app.use('/api/mindmap', require('./routes/biDirectionalMindMapRoutes'));
 app.use('/api/language', require('./routes/languageRoutes'));
 app.use('/api/squads', squadRoutes);
 app.use('/api/study', fatigueRoutes);
 app.use('/api/documents', pdfAnnotationRoutes);
 app.use('/api/sync', syncRoutes);
+app.use('/api/subjective-grader', require('./routes/subjectiveGraderRoutes'));
 app.use('/api/study-plans', studyPlanRoutes);
 app.use('/api/milestones', milestoneRoutes);
 app.use('/api/streaks', streakRoutes);
@@ -434,12 +450,15 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/quiz', quizRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/recommendations', recommendationRoutes);
+app.use('/api/micro', microLearnRoutes);
 app.use('/api/flashcards', flashcardRoutes);
+app.use('/api/factuality', require('./routes/factualityRoutes'));
 app.use('/api/flashcard-decks', flashcardDeckRoutes);
 app.use('/api/decks', require('./routes/publicDeckRoutes'));
 app.use('/api/share', shareRoutes);
 app.use('/api', whiteboardRoutes);
 app.use('/api', mockExamRoutes);
+app.use('/api', aiGatewayRoutes);
 app.use('/api', securityRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/admin', adminRoutes);
@@ -509,12 +528,19 @@ const flashcardMasteryRoutes = require('./routes/flashcardMasteryRoutes');
 app.use('/api/flashcard-mastery', flashcardMasteryRoutes);
 const habitTrackerRoutes = require('./routes/habitTrackerRoutes');
 app.use('/api/habits', habitTrackerRoutes);
+const burnoutPreventionRoutes = require('./routes/burnoutPreventionRoutes');
+app.use('/api/burnout', burnoutPreventionRoutes);
 const learningJournalRoutes = require('./routes/learningJournalRoutes');
 app.use('/api/learning-journal', learningJournalRoutes);
+const studyTimeBudgetRoutes = require('./routes/studyTimeBudgetRoutes');
+app.use('/api/time-budgets', studyTimeBudgetRoutes);
 const studyPlanVersioningRoutes = require('./routes/studyPlanVersioningRoutes');
 app.use('/api/study-plans/:planId', studyPlanVersioningRoutes);
 app.use('/api/interviews', mockInterviewRoutes);
 app.use('/api/pdf', require('./routes/pdfParserRoutes'));
+const certificateVerificationController = require('./controllers/certificateVerificationController');
+app.use(certificateVerificationController);
+
 // Serve static assets from frontend build folder in production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../frontend/dist')));
@@ -653,6 +679,7 @@ global.io = io;
 // Initialize socket handlers
 require('./sockets/battleHandler')(io);
 require('./sockets/chatHandler')(io);
+require('./sockets/e2eeChatHandler')(io);
 require('./sockets/crdtHandler')(io);
 require('./sockets/squadHandler')(io);
 require('./sockets/flashcardCollaborationHandler')(io);
@@ -676,11 +703,11 @@ io.use((socket, next) => {
   }
 });
 
-// User notification room listener & WebSocket active connections gauge tracking
-const { activeWebsocketConnections } = require('./services/metricsService');
+const { activeWebsocketConnections, openprepActiveWebsocketConnections } = require('./services/metricsService');
 
 io.on('connection', (socket) => {
   activeWebsocketConnections.inc();
+  if (openprepActiveWebsocketConnections) openprepActiveWebsocketConnections.inc();
   
   if (socket.user && socket.user.id) {
     socket.join(`user:${socket.user.id}`);
@@ -688,10 +715,14 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     activeWebsocketConnections.dec();
+    if (openprepActiveWebsocketConnections) openprepActiveWebsocketConnections.dec();
   });
 });
 
 // Start background schedulers
+const { initQueue } = require('./services/aiRequestQueue');
+initQueue();
+
 const { startScheduler } = require('./services/weeklyDigestService');
 startScheduler();
 

@@ -114,6 +114,14 @@ API.interceptors.request.use(async (config) => {
     /* ignore */
   }
 
+  // Issue #2211: Inject W3C Trace Context traceparent header for distributed tracing
+  try {
+    const { getW3CTraceParent } = await import('../config/telemetry.js');
+    config.headers['traceparent'] = getW3CTraceParent();
+  } catch (_e) {
+    /* ignore */
+  }
+
   return config;
 }, (error) => {
   return Promise.reject(error);
@@ -462,5 +470,10 @@ export const linkOutlookCalendar = (payload) => API.post('/calendar-sync/outlook
 export const checkCalendarConflicts = (payload) =>
   API.post('/calendar-sync/check-conflicts', payload);
 
+// ── Micro-Learning Study Companion APIs ────────────────────────────────
+export const getNextDueMicroCard = () => API.get('/micro/next-due-card');
+export const submitMicroAnswer = (payload) => API.post('/micro/submit-answer', payload);
+
 export default API;
+
 

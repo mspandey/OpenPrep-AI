@@ -136,6 +136,90 @@ jobs:
         with:
           name: backend-coverage
           path: backend/coverage
+
+  test-chaos:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+          POSTGRES_DB: openprep_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      toxiproxy:
+        image: ghcr.io/shopify/toxiproxy:2.11.0
+        ports:
+          - 8474:8474
+          - 25432:25432
+          - 26379:26379
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+
+      - name: Install Backend Dependencies
+        run: npm install --no-audit
+        working-directory: backend
+
+      - name: Run Chaos Engineering Test Suite
+        run: npm run test:chaos
+        working-directory: backend
+        env:
+          DATABASE_URL_TEST: postgres://postgres:postgrespassword@localhost:5432/openprep_test
+          JWT_SECRET: 'testsecret'
+          TOXIPROXY_URL: 'http://localhost:8474'
+
+      - name: Upload Chaos MTTR Resilience Audit Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chaos-mttr-report
+          path: |
+            backend/coverage/chaos-mttr-report.json
+            backend/coverage/chaos-mttr-report.md
+
+  test-sandbox:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+
+      - name: Install Backend Dependencies
+        run: npm install --no-audit
+        working-directory: backend
+
+      - name: Build Runner Docker Image
+        run: docker build -t openprep-runner:latest ./backend/docker/runner
+
+      - name: Run Sandboxed Execution Unit & Security Tests
+        run: npx vitest run --config vitest.config.chaos.js tests/sandbox/sandboxSecurity.unit.test.js tests/controllers/codeExecutionController.unit.test.js
+        working-directory: backend
+
   test-frontend:
     runs-on: ubuntu-latest
     steps:
@@ -160,9 +244,10 @@ jobs:
         with:
           name: frontend-coverage
           path: frontend/coverage
+
   build:
     runs-on: ubuntu-latest
-    needs: [lint, backend-module-integrity, test-backend, test-frontend]
+    needs: [lint, backend-module-integrity, test-backend, test-chaos, test-sandbox, test-frontend]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3

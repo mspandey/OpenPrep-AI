@@ -25,6 +25,7 @@ import LeatherBoard from '../components/dashboard/LeatherBoard.jsx';
 import VintagePaper from '../components/dashboard/VintagePaper';
 import ThemeToggle from '../components/ThemeToggle';
 import TwoWayCalendarSyncManager from '../components/calendar/TwoWayCalendarSyncManager';
+import MicroLearningSettings from '../components/settings/MicroLearningSettings';
 import API from '../services/api';
 
 import {
@@ -748,6 +749,10 @@ const Settings = () => {
         <VintagePaper className="border-t-4 border-t-indigo-600">
           <TwoWayCalendarSyncManager />
         </VintagePaper>
+
+        {/* --- DAILY MICRO-LEARNING SETTINGS --- */}
+        <MicroLearningSettings />
+
 
 
         {/* --- PROGRESS BADGES & ACHIEVEMENTS --- */}

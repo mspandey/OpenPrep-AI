@@ -4,6 +4,7 @@ import rehypeKatex from 'rehype-katex';
 import remarkMath from 'remark-math';
 import axios from 'axios';
 import { Sparkles, Plus, Check, GraduationCap, AlertCircle, Copy } from 'lucide-react';
+import SentryErrorBoundary from '../common/SentryErrorBoundary';
 import 'katex/dist/katex.min.css';
 
 const api = axios.create({
@@ -175,12 +176,19 @@ export default function OcrResultViewer({ result, originalImageSrc }) {
 
             {/* Markdown + KaTeX rendering area */}
             <div className="bg-slate-950 border border-slate-850 rounded-2xl p-4 overflow-y-auto max-h-[300px] min-h-[180px] prose prose-invert prose-xs text-slate-350">
-              <ReactMarkdown
-                remarkPlugins={[remarkMath]}
-                rehypePlugins={[rehypeKatex]}
-              >
-                {editedSolution || editedLatex || '*No equations or solutions generated*'}
-              </ReactMarkdown>
+              <SentryErrorBoundary fallback={
+                <div className="text-red-400 p-2 border border-red-500/20 bg-red-500/10 rounded">
+                  <p className="font-bold mb-2">Error rendering equation. Raw text:</p>
+                  <pre className="whitespace-pre-wrap font-mono text-[10px]">{editedSolution || editedLatex}</pre>
+                </div>
+              }>
+                <ReactMarkdown
+                  remarkPlugins={[remarkMath]}
+                  rehypePlugins={[rehypeKatex]}
+                >
+                  {editedSolution || editedLatex || '*No equations or solutions generated*'}
+                </ReactMarkdown>
+              </SentryErrorBoundary>
             </div>
           </div>
 

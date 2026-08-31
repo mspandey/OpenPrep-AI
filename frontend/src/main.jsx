@@ -15,9 +15,11 @@ import './i18n';
 import App from './App.jsx'
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { initSentry } from './utils/sentry'
+import { initFrontendTelemetry } from './config/telemetry'
 
-// Initialize Sentry monitoring
+// Initialize monitoring & telemetry
 initSentry();
+initFrontendTelemetry();
 
 // Catch Vite chunk load errors when a new deployment updates JS assets
 window.addEventListener('unhandledrejection', (event) => {

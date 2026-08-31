@@ -1,9 +1,9 @@
 const geminiService = require('../services/geminiService');
 const { GeminiRateLimitError, GeminiServerError } = require('../services/geminiService');
 const llmService = require('../utils/llmService');
+const { ContextIsolationError } = require('../utils/aiContextIsolation');
 const Question = require('../models/Question');
 const Note = require('../models/Note');
-
 // @desc    Generate AI hint / step-by-step explanation for a quiz question
 // @route   POST /api/ai/explain-question
 // @access  Private
@@ -139,10 +139,12 @@ exports.generateQuestions = async (req, res, next) => {
       if (!note) {
         return res.status(404).json({ success: false, error: 'Source note not found' });
       }
+      if (note.user !== req.user.id) {
+        return res.status(403).json({ success: false, error: 'You do not have access to this note' });
+      }
       content = note.content || note.summary || note.title;
       title = title || note.title;
     }
-
     if (!content || typeof content !== 'string' || content.trim().length === 0) {
       return res.status(400).json({
         success: false,
@@ -186,10 +188,15 @@ exports.generateQuestions = async (req, res, next) => {
         retryAfter: error.retryAfter,
       });
     }
+    if (error instanceof ContextIsolationError) {
+      return res.status(400).json({
+        success: false,
+        error: error.message,
+      });
+    }
     next(error);
   }
 };
-
 
 exports.getArtifactHistory = async (req, res) => {
   try {

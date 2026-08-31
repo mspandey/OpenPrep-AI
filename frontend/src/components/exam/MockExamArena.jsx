@@ -119,6 +119,27 @@ const MockExamArena = ({ examId = 'exam_test_123' }) => {
     return () => clearInterval(heartbeatInterval);
   }, [sessionId, answers, violationsCount, showScorecard]);
 
+  // Handle network reconnection to resync timer
+  useEffect(() => {
+    const handleOnline = async () => {
+      if (!sessionId || showScorecard) return;
+      try {
+        const token = localStorage.getItem('token');
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        // Sync with backend to get the authoritative remaining time
+        const res = await axios.get(`/api/mock-exams/${sessionId}/sync`, { headers });
+        if (res.data && res.data.success && res.data.data.elapsedTimeLeft !== undefined) {
+          setElapsedTimeLeft(res.data.data.elapsedTimeLeft);
+        }
+      } catch (err) {
+        console.error('Failed to resync timer after reconnection:', err);
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [sessionId, showScorecard]);
+
   // Monitor Window focus/blur and Full-Screen lock breaches
   useEffect(() => {
     if (showScorecard) return;

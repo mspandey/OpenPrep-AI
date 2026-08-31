@@ -20,6 +20,9 @@ import OfflineIndicator from './components/common/OfflineIndicator';
 import Walkthrough from './components/tutorial/Walkthrough';
 import MobileBottomNav from './components/common/MobileBottomNav';
 import PomodoroWidget from './components/timer/PomodoroWidget';
+import MicroReviewModal from './components/widgets/MicroReviewModal';
+import { startMicroScheduler, showMicroNotification } from './services/microScheduleWorker';
+import ColorblindFilterSVG from './components/common/ColorblindFilterSVG';
 import './App.css';
 
 
@@ -66,6 +69,7 @@ const WeaknessDetectionDashboard = lazy(() => import('./pages/WeaknessDetectionD
 const MistakeNotebook = lazy(() => import('./pages/MistakeNotebook'));
 const StudyPlanner = lazy(() => import('./pages/StudyPlanner'));
 const StudyGoals = lazy(() => import('./pages/StudyGoals'));
+const StudyTimeBudgetDashboard = lazy(() => import('./pages/StudyTimeBudgetDashboard'));
 const VivaSimulator = lazy(() => import('./pages/VivaSimulator'));
 const AttemptHistoryDashboard = lazy(() => import('./pages/AttemptHistoryDashboard'));
 const CollaborativeNoteView = lazy(() => import('./pages/CollaborativeNoteView'));
@@ -74,6 +78,10 @@ const BountyBoardPage = lazy(() => import('./pages/BountyBoardPage'));
 const CodeSandboxPage = lazy(() => import('./pages/code/CodeSandboxPage'));
 const RewardsShop = lazy(() => import('./components/gamification/RewardsShop'));
 const OcrSolverPage = lazy(() => import('./pages/ocr/OcrSolverPage'));
+const MarkdownNotesEditor = lazy(() => import('./components/notes/MarkdownNotesEditor'));
+const KnowledgeGraphView = lazy(() => import('./components/notes/KnowledgeGraphView'));
+const PublicVerifyCertificate = lazy(() => import('./pages/PublicVerifyCertificate'));
+
 
 function App() {
 
@@ -81,6 +89,25 @@ function App() {
   const { sessionExpired, aiQuotaExceededUntil, isAuthenticated, user } = useSelector((state) => state.auth);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [savedSessionPrompt, setSavedSessionPrompt] = useState(null);
+  const [isMicroModalOpen, setIsMicroModalOpen] = useState(false);
+
+  // Setup micro-learning trigger and global window handler
+  useEffect(() => {
+    window.openMicroReviewModal = () => setIsMicroModalOpen(true);
+
+    if (isAuthenticated) {
+      const stopScheduler = startMicroScheduler(() => {
+        setIsMicroModalOpen(true);
+        showMicroNotification('OpenPrep AI: Spaced Recall Time!', {
+          body: 'Take 30 seconds for a quick micro-quiz question to keep your study streak alive.',
+        });
+      });
+      return () => {
+        stopScheduler();
+        delete window.openMicroReviewModal;
+      };
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -196,6 +223,7 @@ function App() {
       <Walkthrough />
       <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       {localStorage.getItem('token') && <PomodoroWidget />}
+      <MicroReviewModal isOpen={isMicroModalOpen} onClose={() => setIsMicroModalOpen(false)} />
       <main id="main-content" tabIndex="-1" role="main" className="focus:outline-none min-h-screen">
         <Suspense fallback={<PageSkeleton />}>
         <Routes>
@@ -208,6 +236,9 @@ function App() {
           <Route path="/verify-email/:token" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/verify/certificate/:certId" element={<PublicVerifyCertificate />} />
+          <Route path="/certificates/verify/:certId" element={<PublicVerifyCertificate />} />
+
 
           <Route
             path="/dashboard"
@@ -286,6 +317,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <CollabNote />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notes/editor"
+            element={
+              <ProtectedRoute>
+                <MarkdownNotesEditor />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notes/graph"
+            element={
+              <ProtectedRoute>
+                <KnowledgeGraphView />
               </ProtectedRoute>
             }
           />
@@ -468,6 +515,15 @@ function App() {
           />
 
           <Route
+            path="/time-budgets"
+            element={
+              <ProtectedRoute>
+                <StudyTimeBudgetDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/settings"
             element={
               <ProtectedRoute>
@@ -528,12 +584,21 @@ function App() {
           <Route path="/medical-cases" element={<MedicalCaseSimulator />} />
           <Route path="/drug-interactions" element={<DrugInteractionChecker />} />
           <Route path="/exam-countdown" element={<ExamCountdownPlanner />} />
+          <Route
+            path="/habit-insights"
+            element={
+              <ProtectedRoute>
+                <HabitCorrelationDashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/clinical-notes" element={<ClinicalNotesSummarizer />} />
           <Route path="/patient-simulator" element={<PatientSimulator />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
       </main>
+      <ColorblindFilterSVG />
       <MobileBottomNav />
       <OfflineBanner />
 
