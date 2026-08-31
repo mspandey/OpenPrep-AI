@@ -12,6 +12,7 @@ export default defineConfig({
       'tests/controllers/pdfAnnotationExport.test.js',
       'tests/controllers/codeExecutionController.unit.test.js',
       'tests/sandbox/sandboxSecurity.unit.test.js',
+      'tests/sso/**/*.unit.test.js',
     ],
     fileParallelism: false,
     testTimeout: 30000,

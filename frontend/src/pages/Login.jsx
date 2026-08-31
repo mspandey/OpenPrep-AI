@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, BookOpen, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, BookOpen, ShieldCheck, Building } from 'lucide-react';
 import GoogleLoginButton from '../components/auth/GoogleLoginButton';
 import GitHubLoginButton from '../components/auth/GitHubLoginButton';
 import { loginUser, loadUser, clearError } from '../store/slices/authSlice';
@@ -11,6 +11,7 @@ import SoundToggle from '../components/SoundToggle';
 import ForgotPasswordModal from '../components/auth/ForgotPasswordModal';
 import { useReCaptcha } from '../hooks/useReCaptcha';
 import LazyImage from '../components/common/LazyImage';
+import API from '../services/api';
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -28,7 +29,30 @@ const Login = () => {
   const [twoFaError, setTwoFaError] = useState('');
 
   const [oauthError, setOauthError] = useState(null);
+  const [ssoLoading, setSsoLoading] = useState(false);
+  const [ssoError, setSsoError] = useState('');
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+
+  const handleSsoDiscovery = async () => {
+    if (!formData.email || !formData.email.includes('@')) {
+      setSsoError('Please enter your institutional email address above first.');
+      return;
+    }
+
+    setSsoLoading(true);
+    setSsoError('');
+
+    try {
+      const res = await API.post('/auth/sso/discover', { email: formData.email });
+      if (res.data.success && res.data.loginUrl) {
+        window.location.href = res.data.loginUrl;
+      }
+    } catch (err) {
+      setSsoError(err.response?.data?.error || 'No institutional SSO found for this domain.');
+    } finally {
+      setSsoLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (isAuthenticated) navigate('/dashboard', { replace: true });
@@ -241,10 +265,25 @@ const Login = () => {
               </form>
             )}
 
-            {/* Social OAuth Buttons */}
+            {/* Social OAuth & Enterprise SSO Buttons */}
             <div className="space-y-3">
               <GoogleLoginButton />
               <GitHubLoginButton />
+              <button
+                type="button"
+                id="sso-login-btn"
+                onClick={handleSsoDiscovery}
+                disabled={ssoLoading}
+                className="w-full py-2.5 px-4 rounded-xl border border-[#CEAB93]/50 dark:border-[#412D15] bg-[#FFFBE9]/80 dark:bg-[#140F0A] hover:bg-[#F7EFE0] dark:hover:bg-[#1A140F] text-[#1F150C] dark:text-[#E1DCC9] font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+              >
+                <Building className="w-4 h-4 text-[#AD8B73]" />
+                {ssoLoading ? 'Discovering SSO IdP...' : 'Sign in with Institutional SSO'}
+              </button>
+              {ssoError && (
+                <p className="text-[11px] text-red-500 font-semibold text-center mt-1">
+                  {ssoError}
+                </p>
+              )}
             </div>
           </div>
 

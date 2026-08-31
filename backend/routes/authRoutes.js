@@ -290,6 +290,14 @@ router.get(
 // Finalize OAuth registration (e.g. if email was private/missing)
 router.post('/oauth/register-email', registerOAuthEmail);
 
+// Enterprise SSO Routes (#2198)
+const ssoController = require('../controllers/ssoController');
+router.post('/sso/discover', ssoController.discoverSsoEndpoint);
+router.get('/sso/oidc/login', ssoController.oidcLogin);
+router.get('/sso/oidc/callback', ssoController.oidcCallback);
+router.get('/sso/saml/login', ssoController.samlLogin);
+router.post('/sso/saml/callback', express.urlencoded({ extended: true }), ssoController.samlCallback);
+
 // Session keepalive routes
 router.post('/session/keepalive', protect, keepalive);
 router.post('/keepalive', protect, keepalive);
