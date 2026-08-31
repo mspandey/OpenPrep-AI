@@ -117,6 +117,15 @@ services:
     networks:
       - openprep_net
 
+  code-runner:
+    build:
+      context: ./backend/docker/runner
+      dockerfile: Dockerfile
+    image: openprep-runner:latest
+    container_name: openprep_code_runner
+    profiles:
+      - sandbox
+
 volumes:
   pg_data:
   redis_data:
