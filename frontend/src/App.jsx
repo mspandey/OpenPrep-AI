@@ -22,6 +22,7 @@ import MobileBottomNav from './components/common/MobileBottomNav';
 import PomodoroWidget from './components/timer/PomodoroWidget';
 import MicroReviewModal from './components/widgets/MicroReviewModal';
 import { startMicroScheduler, showMicroNotification } from './services/microScheduleWorker';
+import ColorblindFilterSVG from './components/common/ColorblindFilterSVG';
 import './App.css';
 
 
@@ -597,6 +598,7 @@ function App() {
         </Routes>
       </Suspense>
       </main>
+      <ColorblindFilterSVG />
       <MobileBottomNav />
       <OfflineBanner />
 
