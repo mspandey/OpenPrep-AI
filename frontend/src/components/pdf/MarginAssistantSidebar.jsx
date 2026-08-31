@@ -222,7 +222,8 @@ const MarginAssistantSidebar = ({
                 <div className="space-y-1.5">
                   {keyConcepts.map((ann) => (
                     <div key={ann.id} className="p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-950">
-                      Page {ann.pageNumber}: {ann.selectedText || ann.commentText || 'Highlight'}
+                      <span className="font-semibold block mb-0.5">Page {ann.pageNumber}:</span>
+                      <p className="line-clamp-5">{ann.selectedText || ann.commentText || 'Highlight'}</p>
                     </div>
                   ))}
                 </div>
@@ -239,7 +240,8 @@ const MarginAssistantSidebar = ({
                 <div className="space-y-1.5">
                   {definitions.map((ann) => (
                     <div key={ann.id} className="p-2 bg-emerald-50 border border-emerald-200 rounded text-xs text-emerald-950">
-                      Page {ann.pageNumber}: {ann.selectedText || ann.commentText || 'Definition'}
+                      <span className="font-semibold block mb-0.5">Page {ann.pageNumber}:</span>
+                      <p className="line-clamp-5">{ann.selectedText || ann.commentText || 'Definition'}</p>
                     </div>
                   ))}
                 </div>
@@ -256,7 +258,8 @@ const MarginAssistantSidebar = ({
                 <div className="space-y-1.5">
                   {formulas.map((ann) => (
                     <div key={ann.id} className="p-2 bg-pink-50 border border-pink-200 rounded text-xs text-pink-950">
-                      Page {ann.pageNumber}: {ann.selectedText || ann.commentText || 'Formula'}
+                      <span className="font-semibold block mb-0.5">Page {ann.pageNumber}:</span>
+                      <p className="line-clamp-5">{ann.selectedText || ann.commentText || 'Formula'}</p>
                     </div>
                   ))}
                 </div>
@@ -273,7 +276,8 @@ const MarginAssistantSidebar = ({
                 <div className="space-y-1.5">
                   {notes.map((ann) => (
                     <div key={ann.id} className="p-2 bg-indigo-50 border border-indigo-200 rounded text-xs text-indigo-950">
-                      Page {ann.pageNumber}: {ann.commentText}
+                      <span className="font-semibold block mb-0.5">Page {ann.pageNumber}:</span>
+                      <p className="line-clamp-5 whitespace-pre-wrap">{ann.commentText}</p>
                     </div>
                   ))}
                 </div>

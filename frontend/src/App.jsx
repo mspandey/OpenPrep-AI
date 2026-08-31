@@ -22,6 +22,7 @@ import MobileBottomNav from './components/common/MobileBottomNav';
 import PomodoroWidget from './components/timer/PomodoroWidget';
 import MicroReviewModal from './components/widgets/MicroReviewModal';
 import { startMicroScheduler, showMicroNotification } from './services/microScheduleWorker';
+import ColorblindFilterSVG from './components/common/ColorblindFilterSVG';
 import './App.css';
 
 
@@ -68,6 +69,7 @@ const WeaknessDetectionDashboard = lazy(() => import('./pages/WeaknessDetectionD
 const MistakeNotebook = lazy(() => import('./pages/MistakeNotebook'));
 const StudyPlanner = lazy(() => import('./pages/StudyPlanner'));
 const StudyGoals = lazy(() => import('./pages/StudyGoals'));
+const StudyTimeBudgetDashboard = lazy(() => import('./pages/StudyTimeBudgetDashboard'));
 const VivaSimulator = lazy(() => import('./pages/VivaSimulator'));
 const AttemptHistoryDashboard = lazy(() => import('./pages/AttemptHistoryDashboard'));
 const CollaborativeNoteView = lazy(() => import('./pages/CollaborativeNoteView'));
@@ -78,6 +80,8 @@ const RewardsShop = lazy(() => import('./components/gamification/RewardsShop'));
 const OcrSolverPage = lazy(() => import('./pages/ocr/OcrSolverPage'));
 const MarkdownNotesEditor = lazy(() => import('./components/notes/MarkdownNotesEditor'));
 const KnowledgeGraphView = lazy(() => import('./components/notes/KnowledgeGraphView'));
+const PublicVerifyCertificate = lazy(() => import('./pages/PublicVerifyCertificate'));
+
 
 function App() {
 
@@ -232,6 +236,9 @@ function App() {
           <Route path="/verify-email/:token" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/verify/certificate/:certId" element={<PublicVerifyCertificate />} />
+          <Route path="/certificates/verify/:certId" element={<PublicVerifyCertificate />} />
+
 
           <Route
             path="/dashboard"
@@ -508,6 +515,15 @@ function App() {
           />
 
           <Route
+            path="/time-budgets"
+            element={
+              <ProtectedRoute>
+                <StudyTimeBudgetDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/settings"
             element={
               <ProtectedRoute>
@@ -568,12 +584,21 @@ function App() {
           <Route path="/medical-cases" element={<MedicalCaseSimulator />} />
           <Route path="/drug-interactions" element={<DrugInteractionChecker />} />
           <Route path="/exam-countdown" element={<ExamCountdownPlanner />} />
+          <Route
+            path="/habit-insights"
+            element={
+              <ProtectedRoute>
+                <HabitCorrelationDashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/clinical-notes" element={<ClinicalNotesSummarizer />} />
           <Route path="/patient-simulator" element={<PatientSimulator />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
       </main>
+      <ColorblindFilterSVG />
       <MobileBottomNav />
       <OfflineBanner />
 

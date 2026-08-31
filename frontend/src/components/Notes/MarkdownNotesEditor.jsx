@@ -9,6 +9,7 @@ const MarkdownNotesEditor = ({ noteId, subjectId, onSaveSuccess }) => {
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('Lecture Notes');
   const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Suggestion popup states for [[ autocomplete
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -61,12 +62,53 @@ const MarkdownNotesEditor = ({ noteId, subjectId, onSaveSuccess }) => {
     fetchNote();
   }, [noteId]);
 
+  // Sync refs for unmount save
+  const titleRef = useRef(title);
+  const contentRef = useRef(content);
+  const categoryRef = useRef(category);
+  const hasUnsavedRef = useRef(hasUnsavedChanges);
+
+  useEffect(() => {
+    titleRef.current = title;
+    contentRef.current = content;
+    categoryRef.current = category;
+    hasUnsavedRef.current = hasUnsavedChanges;
+  }, [title, content, category, hasUnsavedChanges]);
+
+  // Unload & Unmount handler for data loss prevention
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedRef.current) {
+        e.preventDefault();
+        e.returnValue = ''; // Required for modern browsers to show a prompt
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (hasUnsavedRef.current && titleRef.current) {
+        // Trigger a final save on unmount
+        saveNoteOffline({
+          id: noteId || undefined,
+          title: titleRef.current,
+          content: contentRef.current,
+          subjectId,
+          category: categoryRef.current,
+          tags: [],
+        }).catch(err => console.error('Final unmount save failed:', err));
+      }
+    };
+  }, [noteId, subjectId]);
+
   // Handle autocomplete trigger and query matching on key change
   const handleContentChange = (e) => {
     const text = e.target.value;
     const selectionStart = e.target.selectionStart;
     setContent(text);
     setCursorPos(selectionStart);
+    setHasUnsavedChanges(true);
 
     // Look backward from cursor to find last '[['
     const lastOpenIndex = text.lastIndexOf('[[', selectionStart - 1);
@@ -126,6 +168,7 @@ const MarkdownNotesEditor = ({ noteId, subjectId, onSaveSuccess }) => {
       // Save locally (IndexedDB) and trigger background sync
       const savedLocal = await saveNoteOffline(payload);
       
+      setHasUnsavedChanges(false);
       setIsSaving(false);
       if (onSaveSuccess) onSaveSuccess(savedLocal);
     } catch (err) {
@@ -188,7 +231,7 @@ const MarkdownNotesEditor = ({ noteId, subjectId, onSaveSuccess }) => {
             type="text"
             placeholder="Untitled Note"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => { setTitle(e.target.value); setHasUnsavedChanges(true); }}
             className="text-2xl font-black bg-transparent border-b-2 border-transparent hover:border-slate-300 focus:border-indigo-600 dark:focus:border-indigo-400 transition-all focus:outline-none placeholder-slate-400 font-inter px-1 py-0.5"
           />
           <select

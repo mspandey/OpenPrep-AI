@@ -198,6 +198,28 @@ jobs:
             backend/coverage/chaos-mttr-report.json
             backend/coverage/chaos-mttr-report.md
 
+  test-sandbox:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+
+      - name: Install Backend Dependencies
+        run: npm install --no-audit
+        working-directory: backend
+
+      - name: Build Runner Docker Image
+        run: docker build -t openprep-runner:latest ./backend/docker/runner
+
+      - name: Run Sandboxed Execution Unit & Security Tests
+        run: npx vitest run --config vitest.config.chaos.js tests/sandbox/sandboxSecurity.unit.test.js tests/controllers/codeExecutionController.unit.test.js
+        working-directory: backend
+
   test-frontend:
     runs-on: ubuntu-latest
     steps:
@@ -222,9 +244,10 @@ jobs:
         with:
           name: frontend-coverage
           path: frontend/coverage
+
   build:
     runs-on: ubuntu-latest
-    needs: [lint, backend-module-integrity, test-backend, test-chaos, test-frontend]
+    needs: [lint, backend-module-integrity, test-backend, test-chaos, test-sandbox, test-frontend]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3

@@ -108,3 +108,21 @@ export const deleteUserPasskey = async (passkeyId) => {
   const { data } = await API.delete(`/auth/passkey/${passkeyId}`);
   return data;
 };
+
+/**
+ * Ensure the current auth token is valid and silently renew it if expired
+ */
+export const ensureValidToken = async () => {
+  const token = localStorage.getItem('token');
+  if (!token) return false;
+  try {
+    const { data } = await API.post('/auth/passkey/refresh-token');
+    if (data.success && data.token) {
+      localStorage.setItem('token', data.token);
+      return true;
+    }
+  } catch (err) {
+    console.warn('Silent token renewal failed', err);
+  }
+  return false;
+};

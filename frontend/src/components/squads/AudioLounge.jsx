@@ -5,6 +5,7 @@ import {
   Settings, Users, Radio, Info 
 } from 'lucide-react';
 import WebRTCClient from '../../services/webrtcClient';
+import { ensureValidToken } from '../../services/passkeyClient';
 
 export default function AudioLounge({ squadId }) {
   const [inLounge, setInLounge] = useState(false);
@@ -63,6 +64,10 @@ export default function AudioLounge({ squadId }) {
   const joinAudioLounge = async () => {
     try {
       setErrorMsg('');
+      
+      // Ensure token is valid/renewed BEFORE connecting to prevent 401
+      await ensureValidToken();
+      
       const token = localStorage.getItem('token');
       const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
       
