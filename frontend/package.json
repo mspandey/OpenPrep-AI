@@ -39,7 +39,7 @@
     "jszip": "^3.10.1",
     "katex": "^0.18.4",
     "lucide-react": "^1.33.0",
-    "mermaid": "^11.17.1",
+    "mermaid": "^11.17.2",
     "pdfjs-dist": "^6.2.108",
     "prop-types": "^15.8.1",
     "prosemirror-example-setup": "^1.2.3",
